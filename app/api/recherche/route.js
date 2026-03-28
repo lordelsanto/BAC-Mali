@@ -37,7 +37,8 @@ export async function GET(request) {
   }
 
   const anneeNum = parseInt(annee)
-  if (anneeNum < 2015 || anneeNum > new Date().getFullYear()) {
+  // ✅ MODIFIÉ : 2015 → 2021
+  if (anneeNum < 2021 || anneeNum > 2026) {
     return NextResponse.json(
       { error: 'Année invalide.' },
       { status: 400 }
