@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const CENTRES = [
   'BAMAKO RIVE DROITE',
@@ -16,10 +16,8 @@ const CENTRES = [
   'KIDAL',
 ]
 
-const ANNEES = Array.from(
-  { length: new Date().getFullYear() - 2015 + 1 },
-  (_, i) => new Date().getFullYear() - i
-)
+// ✅ MODIF 3 : Uniquement 2021 → 2026
+const ANNEES = [2026, 2025, 2024, 2023, 2022, 2021]
 
 const MENTION_COLOR = {
   'EXCELLENT':  { bg: '#0D3D22', text: '#A8DDB8', label: 'Excellent' },
@@ -31,11 +29,29 @@ const MENTION_COLOR = {
 
 export default function Home() {
   const [numero, setNumero]   = useState('')
-  const [annee, setAnnee]     = useState(String(new Date().getFullYear()))
+  const [annee, setAnnee]     = useState('2026')
   const [centre, setCentre]   = useState('')
   const [loading, setLoading] = useState(false)
-  const [result, setResult]   = useState(null)   // null | { found: false } | { found: true, candidat: {} }
+  const [result, setResult]   = useState(null)
   const [error, setError]     = useState('')
+
+  // ✅ MODIF 1 : Nombre d'admis dynamique depuis Supabase
+  const [admisCount, setAdmisCount]     = useState(null)
+  const [admisAnnee, setAdmisAnnee]     = useState(null)
+  const [admisLoading, setAdmisLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/stats')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) {
+          setAdmisCount(data.count)
+          setAdmisAnnee(data.annee)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setAdmisLoading(false))
+  }, [])
 
   async function handleSearch(e) {
     e.preventDefault()
@@ -489,6 +505,10 @@ export default function Home() {
           line-height: 1;
           margin-bottom: 5px;
         }
+        .stat-num.loading {
+          color: var(--ink-4);
+          animation: pulse-fade 1.2s ease-in-out infinite;
+        }
         .stat-label {
           font-size: 11px;
           font-weight: 500;
@@ -510,6 +530,11 @@ export default function Home() {
         .footer a {
           color: var(--green-600);
           text-decoration: none;
+        }
+
+        @keyframes pulse-fade {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.3; }
         }
 
         @media (max-width: 480px) {
@@ -580,6 +605,7 @@ export default function Home() {
                       onChange={e => setAnnee(e.target.value)}
                       required
                     >
+                      {/* ✅ MODIF 3 : Uniquement 2021–2026 */}
                       {ANNEES.map(a => (
                         <option key={a} value={a}>{a}</option>
                       ))}
@@ -709,19 +735,26 @@ export default function Home() {
             </>
           )}
 
-          {/* Stats */}
+          {/* ✅ MODIF 1 : Stats avec admis dynamique — MODIF 2 : Depuis 2021 */}
           {!result && (
             <div className="stats-strip">
               <div className="stat-box">
-                <div className="stat-num">8 353</div>
-                <div className="stat-label">Admis 2025</div>
+                {admisLoading ? (
+                  <div className="stat-num loading">…</div>
+                ) : (
+                  <div className="stat-num">
+                    {admisCount !== null ? admisCount.toLocaleString('fr-FR') : '—'}
+                  </div>
+                )}
+                <div className="stat-label">Admis {admisAnnee ?? ''}</div>
               </div>
               <div className="stat-box">
                 <div className="stat-num">6</div>
                 <div className="stat-label">Séries</div>
               </div>
+              {/* ✅ MODIF 2 : 2015 → 2021 */}
               <div className="stat-box">
-                <div className="stat-num">2015</div>
+                <div className="stat-num">2021</div>
                 <div className="stat-label">Depuis</div>
               </div>
             </div>
@@ -731,7 +764,7 @@ export default function Home() {
         {/* ─── Footer ─── */}
         <footer className="footer">
           <p>
-            Données officielles — Ministère de l'Éducation Nationale du Mali &bull; Session de juin 2025
+            Données officielles — Ministère de l&apos;Éducation Nationale du Mali &bull; Session de juin 2025
           </p>
           <p style={{ marginTop: 6 }}>
             Un problème ? <a href="mailto:contact@example.com">Contacte-nous</a>
