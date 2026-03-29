@@ -3,17 +3,23 @@
 import { useState, useEffect } from 'react'
 
 const CENTRES = [
-  'BAMAKO RIVE DROITE',
-  'BAMAKO RIVE GAUCHE',
-  'BAMAKO NORD',
-  'KAYES',
-  'KOULIKORO',
-  'SIKASSO',
-  'SEGOU',
-  'MOPTI',
-  'TOMBOUCTOU',
-  'GAO',
-  'KIDAL',
+  { label: 'Bamako Rive Droite', value: 'BAMAKO RIVE DROITE' },
+  { label: 'Bamako Rive Gauche', value: 'BAMAKO RIVE GAUCHE' },
+  { label: 'Kati', value: 'KATI' },
+  { label: 'Kita', value: 'KITA' },
+  { label: 'Kayes', value: 'KAYES' },
+  { label: 'Koulikoro', value: 'KOULIKORO' },
+  { label: 'Bandiagara', value: 'BANDIAGARA' },
+  { label: 'Bougouni', value: 'BOUGOUNI' },
+  { label: 'Sikasso', value: 'SIKASSO' },
+  { label: 'Ségou', value: 'SEGOU' },
+  { label: 'San', value: 'SAN' },
+  { label: 'Koutiala', value: 'KOUTIALA' },
+  { label: 'Kalabancoro', value: 'KALABANCORO' },
+  { label: 'Mopti', value: 'MOPTI' },
+  { label: 'Douentza', value: 'DOUENTZA' },
+  { label: 'Tombouctou', value: 'TOMBOUCTOU' },
+  { label: 'Bassikounou', value: 'BASSIKOUNOU' },
 ]
 
 // ✅ MODIF 3 : Uniquement 2021 → 2026
