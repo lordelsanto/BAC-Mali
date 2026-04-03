@@ -242,3 +242,126 @@ CREATE INDEX IF NOT EXISTS idx_procedures_canal ON public.procedures(canal);
 ALTER TABLE public.procedures ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Procédures lisibles par tous" ON public.procedures;
 CREATE POLICY "Procédures lisibles par tous" ON public.procedures FOR SELECT USING (true);
+
+-- ----------------------------------------------------------------
+-- 8. PROFIL UTILISATEUR + PREMIUM + STORAGE
+-- ----------------------------------------------------------------
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS first_name            TEXT,
+  ADD COLUMN IF NOT EXISTS last_name             TEXT,
+  ADD COLUMN IF NOT EXISTS reputation            INT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS posts_count           INT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS comments_count        INT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS badge                 TEXT NOT NULL DEFAULT 'nouveau',
+  ADD COLUMN IF NOT EXISTS is_premium            BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS premium_since         TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS stripe_customer_id    TEXT,
+  ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Utilisateur crée son propre profil" ON public.profiles;
+CREATE POLICY "Utilisateur crée son propre profil" ON public.profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Buckets Storage
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('voice-messages', 'voice-messages', false)
+ON CONFLICT (id) DO NOTHING;
+
+-- Politiques avatars
+DROP POLICY IF EXISTS "Avatar public read" ON storage.objects;
+CREATE POLICY "Avatar public read" ON storage.objects
+  FOR SELECT USING (bucket_id = 'avatars');
+
+DROP POLICY IF EXISTS "Avatar upload own folder" ON storage.objects;
+CREATE POLICY "Avatar upload own folder" ON storage.objects
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+DROP POLICY IF EXISTS "Avatar update own folder" ON storage.objects;
+CREATE POLICY "Avatar update own folder" ON storage.objects
+  FOR UPDATE TO authenticated
+  USING (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  )
+  WITH CHECK (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+DROP POLICY IF EXISTS "Avatar delete own folder" ON storage.objects;
+CREATE POLICY "Avatar delete own folder" ON storage.objects
+  FOR DELETE TO authenticated
+  USING (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- Politiques vocaux Premium
+DROP POLICY IF EXISTS "Voice premium read" ON storage.objects;
+CREATE POLICY "Voice premium read" ON storage.objects
+  FOR SELECT TO authenticated
+  USING (
+    bucket_id = 'voice-messages'
+    AND EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid() AND p.is_premium = true
+    )
+  );
+
+DROP POLICY IF EXISTS "Voice premium upload own folder" ON storage.objects;
+CREATE POLICY "Voice premium upload own folder" ON storage.objects
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'voice-messages'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+    AND EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = auth.uid() AND p.is_premium = true
+    )
+  );
+
+DROP POLICY IF EXISTS "Voice premium delete own folder" ON storage.objects;
+CREATE POLICY "Voice premium delete own folder" ON storage.objects
+  FOR DELETE TO authenticated
+  USING (
+    bucket_id = 'voice-messages'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- ----------------------------------------------------------------
+-- 9. FORUM V2: audio premium sur les commentaires
+-- ----------------------------------------------------------------
+ALTER TABLE public.forum_comments
+  ADD COLUMN IF NOT EXISTS audio_path         TEXT,
+  ADD COLUMN IF NOT EXISTS audio_duration_sec INT,
+  ADD COLUMN IF NOT EXISTS audio_mime_type    TEXT;
+
+CREATE OR REPLACE VIEW public.forum_comments_view AS
+SELECT
+  c.id,
+  c.post_id,
+  c.user_id,
+  c.parent_id,
+  c.body,
+  c.depth,
+  c.votes_score,
+  c.is_best,
+  c.created_at,
+  c.audio_path,
+  c.audio_duration_sec,
+  c.audio_mime_type,
+  pr.username,
+  pr.avatar_url,
+  pr.badge,
+  pr.reputation
+FROM public.forum_comments c
+LEFT JOIN public.profiles pr ON pr.id = c.user_id;
