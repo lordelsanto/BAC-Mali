@@ -35,7 +35,9 @@ export default function CenouPage() {
       setLoading(true)
       setError('')
       try {
-        const { data, error: queryError } = await getSupabaseClient().from('cenou_rules').select('*').order('id', { ascending: true })
+        const client = getSupabaseClient()
+        if (!client) throw new Error('Supabase non configuré. Vérifiez les variables NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY dans Vercel.')
+        const { data, error: queryError } = await client.from('cenou_rules').select('*').order('id', { ascending: true })
         if (queryError) throw queryError
         if (!cancelled) setRules(Array.isArray(data) ? data : [])
       } catch (err) {
