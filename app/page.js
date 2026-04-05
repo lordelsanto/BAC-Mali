@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const CENTRES = [
   'BAMAKO RIVE DROITE', 'BAMAKO RIVE GAUCHE', 'KATI', 'KITA', 'KAYES',
@@ -16,6 +17,54 @@ const MENTION_COLOR = {
   'BIEN':       { bg: '#1B6B3A', text: '#D4EFDb', label: 'Bien' },
   'ASSEZ-BIEN': { bg: '#8B6914', text: '#F5E6C0', label: 'Assez bien' },
   'PASSABLE':   { bg: '#3A3D36', text: '#D4D6CF', label: 'Passable' },
+}
+
+// Animation variants
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.1, 0.25, 1] } },
+  exit:   { opacity: 0, y: -16, transition: { duration: 0.25 } },
+}
+
+const heroStagger = {
+  hidden: {},
+  show:   { transition: { staggerChildren: 0.1 } },
+}
+
+const heroItem = {
+  hidden: { opacity: 0, y: 20 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] } },
+}
+
+const springCard = {
+  hidden: { opacity: 0, y: 32, scale: 0.97 },
+  show:   { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 260, damping: 24 } },
+  exit:   { opacity: 0, scale: 0.96, y: -12, transition: { duration: 0.22 } },
+}
+
+const resultReveal = {
+  hidden: { opacity: 0, scale: 0.92, y: 28 },
+  show:   { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 26, delay: 0.05 } },
+}
+
+const statsStagger = {
+  hidden: {},
+  show:   { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+}
+
+const statItem = {
+  hidden: { opacity: 0, y: 18, scale: 0.95 },
+  show:   { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 280, damping: 22 } },
+}
+
+const rowStagger = {
+  hidden: {},
+  show:   { transition: { staggerChildren: 0.07, delayChildren: 0.2 } },
+}
+
+const rowItem = {
+  hidden: { opacity: 0, x: -10 },
+  show:   { opacity: 1, x: 0, transition: { duration: 0.3 } },
 }
 
 export default function Home() {
@@ -112,7 +161,6 @@ export default function Home() {
           background: var(--white); border-radius: var(--radius-xl);
           box-shadow: var(--shadow-lg); padding: 36px 32px 32px;
           width: 100%; max-width: 520px;
-          animation: fadeUp 0.5s ease both;
         }
         .card-label {
           font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
@@ -139,12 +187,11 @@ export default function Home() {
           font-size: 15px; font-weight: 600; color: var(--white);
           background: var(--green-700); border: none;
           border-radius: var(--radius-md); cursor: pointer;
-          transition: background 0.2s, transform 0.15s;
+          transition: background 0.2s;
           display: flex; align-items: center; justify-content: center;
           gap: 8px; margin-top: 6px; letter-spacing: 0.01em;
         }
         .btn-search:hover:not(:disabled)  { background: var(--green-800); }
-        .btn-search:active:not(:disabled) { transform: scale(0.99); }
         .btn-search:disabled { opacity: 0.7; cursor: not-allowed; }
         .spinner {
           width: 18px; height: 18px;
@@ -158,14 +205,13 @@ export default function Home() {
           margin-top: 20px; padding: 14px 18px;
           background: #FEF2F2; border: 1px solid #FECACA;
           border-radius: var(--radius-md); color: #991B1B; font-size: 14px;
-          animation: fadeUp 0.3s ease both;
         }
 
         /* ─── Not found ─── */
         .not-found {
           margin-top: 20px; padding: 28px; background: var(--gold-50);
           border: 1px solid var(--gold-100); border-radius: var(--radius-lg);
-          text-align: center; animation: fadeUp 0.4s ease both;
+          text-align: center;
         }
         .not-found-icon {
           width: 48px; height: 48px; background: var(--gold-100);
@@ -183,7 +229,6 @@ export default function Home() {
           margin-top: 20px; background: var(--white);
           border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);
           overflow: hidden; width: 100%; max-width: 520px;
-          animation: fadeUp 0.5s ease both;
         }
         .result-header {
           padding: 28px 32px 24px; display: flex; align-items: flex-start;
@@ -251,7 +296,6 @@ export default function Home() {
           border: 1px solid var(--green-100); border-radius: var(--radius-lg);
           padding: 20px 24px; display: flex; align-items: center;
           justify-content: space-between; gap: 16px;
-          animation: fadeUp 0.6s 0.05s ease both;
           text-decoration: none;
         }
         .cta-orientation:hover { border-color: var(--green-200); }
@@ -263,7 +307,7 @@ export default function Home() {
         .stats-strip {
           width: 100%; max-width: 520px; margin-top: 28px;
           display: grid; grid-template-columns: repeat(3, 1fr);
-          gap: 10px; animation: fadeUp 0.6s 0.1s ease both;
+          gap: 10px;
         }
         .stat-box {
           background: var(--white); border-radius: var(--radius-lg);
@@ -292,152 +336,234 @@ export default function Home() {
 
       <div className="page">
         {/* ─── Hero ─── */}
-        <section className="hero">
-          <p className="hero-eyebrow">Vérification officielle</p>
-          <h1 className="hero-title">
+        <motion.section
+          className="hero"
+          variants={heroStagger}
+          initial="hidden"
+          animate="show"
+        >
+          <motion.p className="hero-eyebrow" variants={heroItem}>Vérification officielle</motion.p>
+          <motion.h1 className="hero-title" variants={heroItem}>
             Consultez vos<br />
             résultats du <em>Baccalauréat</em>
-          </h1>
-          <p className="hero-sub">
+          </motion.h1>
+          <motion.p className="hero-sub" variants={heroItem}>
             Entrez votre numéro de place pour accéder à vos résultats officiels de la session de juin.
-          </p>
-        </section>
+          </motion.p>
+        </motion.section>
 
         {/* ─── Card zone ─── */}
         <main className="card-wrap">
+          <AnimatePresence mode="wait">
 
-          {/* Search form */}
-          {!result && (
-            <div className="search-card">
-              <form onSubmit={handleSearch}>
-                <div className="card-field">
-                  <div className="card-label">Numéro de place</div>
-                  <input
-                    className="card-input"
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="Ex : 2415"
-                    value={numero}
-                    onChange={e => setNumero(e.target.value.replace(/\D/g, ''))}
-                    maxLength={8}
-                    required
-                    autoFocus
-                  />
-                </div>
-                <div className="row-2">
+            {/* Search form */}
+            {!result && (
+              <motion.div
+                key="search"
+                className="search-card"
+                variants={springCard}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+              >
+                <form onSubmit={handleSearch}>
                   <div className="card-field">
-                    <div className="card-label">Année</div>
-                    <select className="card-input" value={annee} onChange={e => setAnnee(e.target.value)} required>
-                      {ANNEES.map(a => <option key={a} value={a}>{a}</option>)}
-                    </select>
+                    <div className="card-label">Numéro de place</div>
+                    <input
+                      className="card-input"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Ex : 2415"
+                      value={numero}
+                      onChange={e => setNumero(e.target.value.replace(/\D/g, ''))}
+                      maxLength={8}
+                      required
+                      autoFocus
+                    />
                   </div>
-                  <div className="card-field">
-                    <div className="card-label">Centre</div>
-                    <select className="card-input" value={centre} onChange={e => setCentre(e.target.value)} required>
-                      <option value="">Choisir…</option>
-                      {CENTRES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                  <div className="row-2">
+                    <div className="card-field">
+                      <div className="card-label">Année</div>
+                      <select className="card-input" value={annee} onChange={e => setAnnee(e.target.value)} required>
+                        {ANNEES.map(a => <option key={a} value={a}>{a}</option>)}
+                      </select>
+                    </div>
+                    <div className="card-field">
+                      <div className="card-label">Centre</div>
+                      <select className="card-input" value={centre} onChange={e => setCentre(e.target.value)} required>
+                        <option value="">Choisir…</option>
+                        {CENTRES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
                   </div>
-                </div>
-                <button className="btn-search" type="submit" disabled={loading}>
-                  {loading ? <><div className="spinner" /> Recherche en cours…</> : 'Vérifier mes résultats'}
-                </button>
-              </form>
-              {error && <div className="error-box">{error}</div>}
-            </div>
-          )}
+                  <motion.button
+                    className="btn-search"
+                    type="submit"
+                    disabled={loading}
+                    whileTap={{ scale: 0.97 }}
+                    whileHover={{ scale: 1.01 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                  >
+                    {loading ? <><div className="spinner" /> Recherche en cours…</> : 'Vérifier mes résultats'}
+                  </motion.button>
+                </form>
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      className="error-box"
+                      variants={fadeUp}
+                      initial="hidden"
+                      animate="show"
+                      exit="exit"
+                    >
+                      {error}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
 
-          {/* Not found */}
-          {result && !result.found && (
-            <div className="search-card">
-              <div className="not-found">
-                <div className="not-found-icon">?</div>
-                <h3>Candidat introuvable</h3>
-                <p>Aucun résultat pour le numéro <strong>{numero}</strong> au centre de <strong>{centre}</strong> en <strong>{annee}</strong>.</p>
-                <p style={{ marginTop: 10 }}>Vérifie ton numéro de place sur ta convocation, et assure-toi d'avoir sélectionné le bon centre et la bonne année.</p>
-              </div>
-              <button className="btn-search" onClick={handleReset} style={{ marginTop: 20 }}>
-                Faire une nouvelle recherche
-              </button>
-            </div>
-          )}
+            {/* Not found */}
+            {result && !result.found && (
+              <motion.div
+                key="notfound"
+                className="search-card"
+                variants={springCard}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+              >
+                <div className="not-found">
+                  <div className="not-found-icon">?</div>
+                  <h3>Candidat introuvable</h3>
+                  <p>Aucun résultat pour le numéro <strong>{numero}</strong> au centre de <strong>{centre}</strong> en <strong>{annee}</strong>.</p>
+                  <p style={{ marginTop: 10 }}>Vérifie ton numéro de place sur ta convocation, et assure-toi d'avoir sélectionné le bon centre et la bonne année.</p>
+                </div>
+                <motion.button
+                  className="btn-search"
+                  onClick={handleReset}
+                  style={{ marginTop: 20 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  Faire une nouvelle recherche
+                </motion.button>
+              </motion.div>
+            )}
 
-          {/* Found */}
-          {result && result.found && (
-            <div className="result-card">
-              <div className="result-header">
-                <div>
-                  <div className="result-name">{result.candidat.prenoms} {result.candidat.nom}</div>
-                  <div className="result-numero">N° de place : {numero} &bull; {result.candidat.centre}</div>
-                </div>
-                <div className="admis-pill">
-                  <div className="admis-dot" />
-                  <span className="admis-text">Admis</span>
-                </div>
-              </div>
-              <div className="result-body">
-                <div className="result-row">
-                  <span className="result-key">Série</span>
-                  <span className="result-val">{result.candidat.serie}</span>
-                </div>
-                <div className="result-row">
-                  <span className="result-key">Mention</span>
-                  <span className="mention-badge" style={{ background: mentionStyle.bg, color: mentionStyle.text }}>
-                    {mentionStyle.label}
-                  </span>
-                </div>
-                <div className="result-row">
-                  <span className="result-key">Session</span>
-                  <span className="result-val">Juin {result.candidat.annee}</span>
-                </div>
-                <div className="result-row">
-                  <span className="result-key">Centre</span>
-                  <span className="result-val" style={{ fontSize: 13 }}>{result.candidat.centre}</span>
-                </div>
-              </div>
-              <div className="result-footer">
-                <button className="btn-share" onClick={() => {
-                  const msg = `J'ai obtenu mon BAC ${result.candidat.annee} avec la mention "${mentionStyle.label}" ! 🎓 Mali`
-                  navigator.share
-                    ? navigator.share({ title: 'Résultat BAC', text: msg })
-                    : navigator.clipboard.writeText(msg)
-                }}>Partager</button>
-                <button className="btn-new" onClick={handleReset}>Nouvelle recherche</button>
-              </div>
-            </div>
-          )}
+          </AnimatePresence>
 
-          {/* CTA Orientation (visible after result found) */}
-          {result && result.found && (
-            <a href="/orientation" className="cta-orientation">
-              <div className="cta-text">
-                <strong>🧭 Et maintenant ?</strong>
-                Découvrez les filières adaptées à votre série {result.candidat.serie}
-              </div>
-              <span className="cta-arrow">→</span>
-            </a>
-          )}
+          {/* Found — résultat admis */}
+          <AnimatePresence>
+            {result && result.found && (
+              <>
+                <motion.div
+                  key="result"
+                  className="result-card"
+                  variants={resultReveal}
+                  initial="hidden"
+                  animate="show"
+                  exit={{ opacity: 0, scale: 0.95 }}
+                >
+                  <div className="result-header">
+                    <motion.div
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.15, duration: 0.4 }}
+                    >
+                      <div className="result-name">{result.candidat.prenoms} {result.candidat.nom}</div>
+                      <div className="result-numero">N° de place : {numero} &bull; {result.candidat.centre}</div>
+                    </motion.div>
+                    <motion.div
+                      className="admis-pill"
+                      initial={{ opacity: 0, scale: 0.7 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.25, type: 'spring', stiffness: 350, damping: 20 }}
+                    >
+                      <div className="admis-dot" />
+                      <span className="admis-text">Admis</span>
+                    </motion.div>
+                  </div>
+
+                  <motion.div
+                    className="result-body"
+                    variants={rowStagger}
+                    initial="hidden"
+                    animate="show"
+                  >
+                    {[
+                      { key: 'Série',   val: result.candidat.serie },
+                      { key: 'Mention', val: null, badge: true },
+                      { key: 'Session', val: `Juin ${result.candidat.annee}` },
+                      { key: 'Centre',  val: result.candidat.centre, small: true },
+                    ].map(row => (
+                      <motion.div className="result-row" key={row.key} variants={rowItem}>
+                        <span className="result-key">{row.key}</span>
+                        {row.badge
+                          ? <span className="mention-badge" style={{ background: mentionStyle.bg, color: mentionStyle.text }}>{mentionStyle.label}</span>
+                          : <span className="result-val" style={row.small ? { fontSize: 13 } : {}}>{row.val}</span>
+                        }
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  <div className="result-footer">
+                    <button className="btn-share" onClick={() => {
+                      const msg = `J'ai obtenu mon BAC ${result.candidat.annee} avec la mention "${mentionStyle.label}" ! 🎓 Mali`
+                      navigator.share
+                        ? navigator.share({ title: 'Résultat BAC', text: msg })
+                        : navigator.clipboard.writeText(msg)
+                    }}>Partager</button>
+                    <button className="btn-new" onClick={handleReset}>Nouvelle recherche</button>
+                  </div>
+                </motion.div>
+
+                <motion.a
+                  href="/orientation"
+                  className="cta-orientation"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35, duration: 0.4 }}
+                  whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                >
+                  <div className="cta-text">
+                    <strong>🧭 Et maintenant ?</strong>
+                    Découvrez les filières adaptées à votre série {result.candidat.serie}
+                  </div>
+                  <span className="cta-arrow">→</span>
+                </motion.a>
+              </>
+            )}
+          </AnimatePresence>
 
           {/* Stats strip */}
-          {!result && (
-            <div className="stats-strip">
-              <div className="stat-box">
-                {admisLoading
-                  ? <div className="stat-num loading">…</div>
-                  : <div className="stat-num">{admisCount !== null ? admisCount.toLocaleString('fr-FR') : '—'}</div>
-                }
-                <div className="stat-label">Admis {admisAnnee ?? ''}</div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-num">6</div>
-                <div className="stat-label">Séries</div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-num">2021</div>
-                <div className="stat-label">Depuis</div>
-              </div>
-            </div>
-          )}
+          <AnimatePresence>
+            {!result && (
+              <motion.div
+                key="stats"
+                className="stats-strip"
+                variants={statsStagger}
+                initial="hidden"
+                animate="show"
+                exit={{ opacity: 0 }}
+              >
+                <motion.div className="stat-box" variants={statItem}>
+                  {admisLoading
+                    ? <div className="stat-num loading">…</div>
+                    : <div className="stat-num">{admisCount !== null ? admisCount.toLocaleString('fr-FR') : '—'}</div>
+                  }
+                  <div className="stat-label">Admis {admisAnnee ?? ''}</div>
+                </motion.div>
+                <motion.div className="stat-box" variants={statItem}>
+                  <div className="stat-num">6</div>
+                  <div className="stat-label">Séries</div>
+                </motion.div>
+                <motion.div className="stat-box" variants={statItem}>
+                  <div className="stat-num">2021</div>
+                  <div className="stat-label">Depuis</div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
       </div>
     </>
